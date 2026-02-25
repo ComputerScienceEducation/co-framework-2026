@@ -1,18 +1,21 @@
 # Your programs will run as standalone executables
 add_compile_definitions(STANDALONE)
 
-# Check if on macOS and add -DMACOS flag
+# maxOS (Apple Silicon) Support
 if (APPLE)
     message(STATUS "Detected macOS, adding -DMACOS flag")
     add_compile_definitions(MACOS)
     set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE INTERNAL "" FORCE)
 endif ()
 
-# Check if on ARM64 and add -arch x86_64 flag
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-    message(STATUS "Detected ARM64, adding -arch x86_64 flag")
-    add_compile_options(-arch x86_64)
-    add_link_options(-arch x86_64)
+# ARM WSL/LINUX Support
+if(NOT APPLE AND UNIX AND (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64"))
+    message(STATUS "Detected ARM64 Linux, Cross-compiling to x86_64")
+
+    set(X86_TARGET "--target=x86_64-unknown-linux-gnu")
+    add_compile_options(${X86_TARGET})
+    add_link_options(${X86_TARGET})
+    set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${X86_TARGET}")
 endif ()
 
 # Please use WSL :(
