@@ -36,9 +36,12 @@ main() {
 		mounts+=(-v "$d:/co-lab/$(basename "$d")")
 	done
 
+	local tty=-i
+	[ -t 0 ] && [ -t 1 ] && tty=-it
+
 	docker run --platform linux/amd64 --rm \
 		"${mounts[@]}" \
-		-i $IMAGE_NAME \
+		$tty $IMAGE_NAME \
 		"$(basename "$1")" "${@:2}"
 }
 
