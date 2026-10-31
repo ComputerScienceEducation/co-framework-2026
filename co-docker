@@ -2,13 +2,14 @@
 # Script used to build and run a target from the current directory
 # Runs the target in a Docker container x86_64 Ubuntu 24.04
 
-IMAGE_NAME="co-lab"
+IMAGE_NAME="ghcr.io/tcvdh/co-lab:2027"
 
 create_docker() {
-	# Check if the Docker image exists
-	if ! docker images | grep -q "$IMAGE_NAME"; then
-		echo "Docker image $IMAGE_NAME not found. Building the image..."
-		docker buildx build --platform linux/amd64 -t $IMAGE_NAME . || return 1
+	if ! docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
+		echo "Pulling $IMAGE_NAME..."
+		docker pull --platform linux/amd64 "$IMAGE_NAME" && return 0
+		echo "Pull failed. Building the image locally..."
+		docker buildx build --platform linux/amd64 -t "$IMAGE_NAME" . || return 1
 	fi
 	return 0
 }
@@ -24,19 +25,21 @@ main() {
 		exit 1
 	}
 
+	local mounts=(
+		-v "$PWD/CMakeLists.txt:/co-lab/CMakeLists.txt:ro"
+		-v "$PWD/.cmake:/co-lab/.cmake:ro"
+		-v "$PWD/build-run:/co-lab/build-run:ro"
+	)
+	local d
+	for d in "$PWD"/a[0-9]*/; do
+		d=${d%/}
+		mounts+=(-v "$d:/co-lab/$(basename "$d")")
+	done
+
 	docker run --platform linux/amd64 --rm \
-		-v ./a0-playground:/co-lab/a0-playground \
-		-v ./a1-inout:/co-lab/a1-inout \
-		-v ./a2-factorial:/co-lab/a2-factorial \
-		-v ./a3a-fibonacci-calculator:/co-lab/a3a-fibonacci-calculator \
-		-v ./a3b-fibonacci-repl:/co-lab/a3b-fibonacci-repl \
-		-v ./a4-diff:/co-lab/a4-diff \
-		-v ./a5-printf:/co-lab/a5-printf \
-		-v ./a6-hpc:/co-lab/a6-hpc \
-		-v ./a7-bmp:/co-lab/a7-bmp \
-		-v ./a8-game:/co-lab/a8-game \
+		"${mounts[@]}" \
 		-i $IMAGE_NAME \
-		"$(basename $1)" ${@:2}
+		"$(basename "$1")" "${@:2}"
 }
 
-main $@
+main "$@"
