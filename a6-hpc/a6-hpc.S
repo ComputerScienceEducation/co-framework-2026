@@ -43,10 +43,10 @@ fmt_info:
 fmt_div:
     .asciz "-------------------------------------------------------------\n"
 fmt_title:
-    .asciz "%-8s  %13s  %11s  %11s  %11s\n"
+    .asciz "%-10s  %14s  %8s  %11s  %11s\n"
     # printf(fmt_title, col_title_function, ...)
 fmt_row:
-    .asciz "%-10s  %12.1f  %11.6f  %11.6f  %11.6f\n"
+    .asciz "%-9s  %12.1f  %11.6f  %11.6f  %11.6f\n"
     # printf(fmt_row, row_title_copy, 13029.0, ...)
 col_title_function: .asciz "Function"
 col_title_rate: .asciz "Best Rate MB/s"
