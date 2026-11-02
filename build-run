@@ -3,19 +3,33 @@
 # Usage: ./build-run <target> [args...]
 
 build() {
-	cmake -S . -B .build 1>/dev/null 2>/tmp/cmake_err.log || {
-		echo "Failed to configure project"
-		cat /tmp/cmake_err.log
-		return 1
-	}
-	cmake --build .build -t "$1" 1>/dev/null 2>/tmp/cmake_err.log || {
+	local err out
+	err=$(mktemp)
+	out=$(mktemp)
+	if [ ! -f .build/CMakeCache.txt ]; then
+		cmake -S . -B .build 1>/dev/null 2>"$err" || {
+			echo "Failed to configure project"
+			cat "$err"
+			rm -f "$err" "$out"
+			return 1
+		}
+	fi
+	cmake --build .build -t "$1" 1>"$out" 2>"$err" || {
 		echo "Failed to build target"
-		cat /tmp/cmake_err.log
+		cat "$err"
+		rm -f "$err" "$out"
 		return 1
 	}
+	[ -x "./$1" ] || cat "$out"
+	rm -f "$err" "$out"
 	return 0
 }
 
 [ -z "$1" ] && echo "Usage: $0 <target> [args...]" && exit 1
+case "$(uname -s)-$(uname -m)" in
+Linux-aarch64 | Linux-arm*) exec ./co-docker "$@" ;;
+esac
+
 build "$1" || exit 1
-./"$1" ${@:1}
+[ -x "./$1" ] || exit 0
+./"$1" "${@:2}"

@@ -68,6 +68,12 @@
       "group": "build"
     },
     {
+      "label": "Run A6 Compare",
+      "type": "shell",
+      "command": "${config:cmdBuildDebug} a6-compare",
+      "group": "build"
+    },
+    {
       "label": "Build A7 BMP Encode",
       "type": "shell",
       "command": "${config:cmdBuildDebug} a7-encode",
